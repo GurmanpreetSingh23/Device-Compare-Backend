@@ -13,14 +13,25 @@ const indexRoutes = require("./routes/indexRoutes");
 const deviceRoutes = require("./routes/deviceRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://device-compare.netlify.app",
+];
+
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
-  })
+  }),
 );
 app.use(cookieParser());
 app.use(morgan("dev"));
