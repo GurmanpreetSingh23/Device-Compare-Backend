@@ -22,9 +22,13 @@ module.exports.getAllProducts = async (req, res) => {
       query.model = { $regex: req.query.model, $options: "i" };
     }
 
-    const dbLimit = Number(limit) || 2000;
+    const dbLimit = Number(limit) || 300;
+
+    console.time("finding product");
 
     let products = await model.find(query).limit(dbLimit).lean();
+
+    console.timeEnd("finding product");
 
     if (minPrice || maxPrice) {
       const min = Number(minPrice) || 0;

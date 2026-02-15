@@ -2,6 +2,14 @@ const Admin = require("../models/adminModel");
 const bcrypt = require("bcrypt");
 const { generateToken } = require("../utils/generateToken");
 
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: false,
+  sameSite: "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
 // Admin registration
 module.exports.registerAdmin = async (req, res) => {
   try {
@@ -38,13 +46,7 @@ module.exports.registerAdmin = async (req, res) => {
 
     const token = generateToken(createdAdmin._id);
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: false, // localhost
-      path: "/",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("token", token, cookieOptions);
 
     return res.status(201).json({
       message: "Admin registered successfully",
@@ -78,13 +80,7 @@ module.exports.loginAdmin = async (req, res) => {
 
     const token = generateToken(admin._id);
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: false,
-      path: "/",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("token", token, cookieOptions);
 
     return res.json({
       message: "Login successful",
@@ -104,12 +100,7 @@ module.exports.loginAdmin = async (req, res) => {
 // Admin logout
 module.exports.logoutAdmin = (req, res) => {
   try {
-    res.clearCookie("token", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: false,
-      path: "/",
-    });
+    res.clearCookie("token", cookieOptions);
 
     return res.json({ message: "Logged out successfully" });
   } catch (error) {

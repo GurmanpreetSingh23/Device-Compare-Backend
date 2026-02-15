@@ -2,6 +2,14 @@ const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const { generateToken } = require("../utils/generateToken");
 
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: false,
+  sameSite: "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
 module.exports.registerUser = async (req, res) => {
   try {
     let { name, email, password } = req.body;
@@ -34,12 +42,7 @@ module.exports.registerUser = async (req, res) => {
     }
 
     const token = generateToken(createdUser._id);
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie("token", token, cookieOptions);
 
     console.log("User registered successfully");
     return res.status(201).json({
@@ -82,12 +85,7 @@ module.exports.loginUser = async (req, res) => {
     }
 
     const token = generateToken(user._id);
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("token", token, cookieOptions);
 
     console.log("User logged in successfully");
     return res.json({
@@ -105,13 +103,46 @@ module.exports.loginUser = async (req, res) => {
   }
 };
 
+module.exports.updateUser = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    const { name, email, password } = req.body;
+
+    const updateData = {};
+
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      updateData.password = hashedPassword;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+      new: true,
+    }).select("-password");
+
+    return res.status(200).json({
+      success: true,
+      user: updatedUser,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
 module.exports.logoutUser = (req, res) => {
   try {
-    res.clearCookie("token", {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: process.env.NODE_ENV === "production",
-    });
+    res.clearCookie("token", cookieOptions);
 
     console.log("User logged out");
     return res.json({ message: "Logged out successfully" });
