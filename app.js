@@ -16,7 +16,7 @@ const adminRoutes = require("./routes/adminRoutes");
 // Middlewares
 app.use(cookieParser());
 app.use(cors({
-  origin: "https://device-compare.netlify.app/",
+  origin: "https://device-compare.netlify.app",
   credentials: true,
 }))
 app.use(express.json());
